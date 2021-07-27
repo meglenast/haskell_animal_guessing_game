@@ -1,8 +1,9 @@
 import Prelude
+-- import Data.List(length)
 
 -- --TO-DO -- create propper data structure
 data Animal = Animal { animal_name :: String,
-                        properties :: [String]} deriving Show
+                        properties :: [String]} deriving (Show, Read)
         
 cat :: Animal
 cat = Animal "cat" ["4-legged", "furry", "meows"]
@@ -23,6 +24,10 @@ dog1 = Animal "dog1" ["4-legged", "furry", "barks", "big"]
 dataset :: [Animal]
 dataset = [cat, coala, dog, dog1]
 
+length' :: [a] -> Int
+length' [] = 0
+length' (x:xs) = 1 + length' xs
+
 -- --TO-DO -- funcition that loads the properties into list of properties
 loadPropertiesSet :: [Animal] -> [String]
 loadPropertiesSet [] = []
@@ -38,13 +43,16 @@ makeGuess :: [Animal] -> String
 makeGuess animals =  animal_name $ head $ filter (\ curr -> null (properties curr)) animals
 
 -- --TO-DO --reduce Animals
+--when yes
 reduceProperties :: [Animal] -> String -> [Animal]
 reduceProperties [] _ = []
 reduceProperties xs has_property = map (\ curr -> (dropProp has_property curr)) xs  
 
-filterProperties :: [Animal] -> String -> [Animal]
-filterProperties [] _ = []
-filterProperties xs has_property = map (\ curr -> (dropProp has_property curr)) xs
+-- --TO-DO --
+--when no
+reduceAnimals :: [Animal] -> String -> [Animal]
+reduceAnimals [] _ = []
+reduceAnimals xs has_property = filter (\ x -> not(has_property `elem` (properties x))) xs
 
 -- --TO-DO -- dropProp
 dropProp :: String -> Animal -> Animal
@@ -55,22 +63,43 @@ dropStr _ [] = []
 dropStr str (x:xs)
     | x == str = xs
     | otherwise = x : dropStr str xs
--- --TO-DO -- ask question
+
+unableToGuess :: [Animal] -> [String] -> IO()
+unableToGuess animals satisfied = do
+    putStrLn "Not enough data to quess..\nMake me smarter and answer those questtions..\nWhat was your animal?.."
+    userAnimal <- getLine
+    putStrLn "Tell me a true fact about it.\nHow can I recognize it?"
+    userProp <- getLine
+    putStrLn "FINISH WRitiNG iN FILE"
+    -- writeFile "animals.txt" ((Animal userAnimal (userProp:satisfied)):animals)
+    -- writeFile "animals.txt" animals
+
+makeGuess' :: [Animal] -> String
+makeGuess' xs = foldl (\ res curr -> if (length' (properties curr)) < (length' (properties curr)) then curr else res ) (head xs) xs
+
+-- ableToGuess :: [Animal] -> [Animal] -> [String] -> IO ()
+ableToGuess prevDataBase currAnimals satisfied = do
+    putStrLn "here"
+  --  putStrLn "I'll try to make a quess..\nWas your animal a/an..." ++ (makeGuess' )
+--    let guessed = makeGuess' currAnimals
+
+--TO-DO -- ask question
 -- ask :: [Animal] -> [String] -> IO ()
 -- ask  animals properties = ask' animals properties []
-    -- where 
+--     where 
 
-ask' :: [Animal] -> [String] -> [String]  -> IO ()
-ask' animals [] _ = do putStrLn "TO-DO-GUESSING-FUNCS"
-ask' animals properties satisfied
+ask' :: [Animal] -> [Animal] -> [String] -> [String]  -> IO ()
+ask' currAnimals animals [] satisfied = do ableToGuess currAnimals animals satisfied
+ask' currAnimals [] _ satisfied = do unableToGuess currAnimals satisfied
+ask' currAnimals animals properties satisfied
     | readyToGuess animals = do putStrLn $ makeGuess animals
     | otherwise = do
         putStrLn ("Is your animal " ++ (head properties) ++ " ? Y/N..")
         userInput <- getLine
-        if userInput ==  "Y" then
-            ask'  (reduceProperties animals (head properties)) (tail properties) (head properties : satisfied)
+        if userInput ==  "Y" then --to-do case instead
+            ask' currAnimals (reduceProperties animals (head properties)) (tail properties) (head properties : satisfied)
         else 
-            ask' animals (tail properties) satisfied
+            ask' currAnimals (reduceAnimals animals (head properties)) (tail properties) satisfied
 
 -- main = do
 --     putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."
