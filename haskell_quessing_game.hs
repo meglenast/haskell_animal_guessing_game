@@ -17,16 +17,16 @@ dog = Animal "dog" ["4-legged", "furry", "barks"]
 -- dog = Animal "dog" []
 
 dog1 :: Animal
-dog1 = Animal "dog1" ["4-legged", "furry", "barks", "big"]
+dog1 = Animal "dog1" ["4-legged", "furry", "barks"]
 -- dog1 = Animal "dog1" []
 
 -- --TO-DO -- function that loads animals from file int a list of Animals
 dataset :: [Animal]
 dataset = [cat, coala, dog, dog1]
 
-length' :: [a] -> Int
-length' [] = 0
-length' (x:xs) = 1 + length' xs
+len :: [a] -> Int
+len [] = 0
+len (x:xs) = 1 + len xs
 
 -- --TO-DO -- funcition that loads the properties into list of properties
 loadPropertiesSet :: [Animal] -> [String]
@@ -74,14 +74,14 @@ unableToGuess animals satisfied = do
     -- writeFile "animals.txt" ((Animal userAnimal (userProp:satisfied)):animals)
     -- writeFile "animals.txt" animals
 
-makeGuess' :: [Animal] -> String
-makeGuess' xs = foldl (\ res curr -> if (length' (properties curr)) < (length' (properties curr)) then curr else res ) (head xs) xs
+makeProbableGuess :: [Animal] -> String
+makeProbableGuess [] = " "
+makeProbableGuess xs = animal_name probable_guess
+    where probable_guess = foldl (\ res curr -> (if (len (properties curr) < len (properties curr)) then curr else res )) (head xs) xs
 
--- ableToGuess :: [Animal] -> [Animal] -> [String] -> IO ()
+ableToGuess :: [Animal] -> [Animal] -> [String] -> IO ()
 ableToGuess prevDataBase currAnimals satisfied = do
-    putStrLn "here"
-  --  putStrLn "I'll try to make a quess..\nWas your animal a/an..." ++ (makeGuess' )
---    let guessed = makeGuess' currAnimals
+   putStrLn $ "I'll try to make a quess..\nWas your animal a/an..." ++ (makeProbableGuess currAnimals) ++ " ?"
 
 --TO-DO -- ask question
 -- ask :: [Animal] -> [String] -> IO ()
