@@ -1,9 +1,12 @@
 import Prelude
--- import Data.List(length)
+import Data.List
 
 -- --TO-DO -- create propper data structure
 data Animal = Animal { animal_name :: String,
-                        properties :: [String]} deriving (Show, Read)
+                        properties :: [String]} deriving (Read)
+                
+instance Show Animal where
+    show (Animal animal_name properties) = show (animal_name) ++ show (properties)
         
 cat :: Animal
 cat = Animal "cat" ["4-legged", "furry", "meows"]
@@ -24,9 +27,10 @@ dog1 = Animal "dog1" ["4-legged", "furry", "barks"]
 dataset :: [Animal]
 dataset = [cat, coala, dog, dog1]
 
-len :: [a] -> Int
-len [] = 0
-len (x:xs) = 1 + len xs
+-- writeToFile :: [Animal] -> IO()
+-- writeToFile [] = do putStrLn "Done writing in file..\n"
+-- writeToFile (x:xs) = do writeFile "animals.txt" (show x) and writeToFile xs
+
 
 -- --TO-DO -- funcition that loads the properties into list of properties
 loadPropertiesSet :: [Animal] -> [String]
@@ -72,12 +76,12 @@ unableToGuess animals satisfied = do
     userProp <- getLine
     putStrLn "FINISH WRitiNG iN FILE"
     -- writeFile "animals.txt" ((Animal userAnimal (userProp:satisfied)):animals)
-    -- writeFile "animals.txt" animals
-
+    writeFile "animals.txt" . intercalate "\n" . map show $ ((Animal userAnimal (userProp:[])):animals)
+   
 makeProbableGuess :: [Animal] -> String
 makeProbableGuess [] = " "
 makeProbableGuess xs = animal_name probable_guess
-    where probable_guess = foldl (\ res curr -> (if (len (properties curr) < len (properties curr)) then curr else res )) (head xs) xs
+    where probable_guess = foldl (\ res curr -> (if (length (properties curr) < length (properties curr)) then curr else res )) (head xs) xs
 
 ableToGuess :: [Animal] -> [Animal] -> [String] -> IO ()
 ableToGuess prevDataBase currAnimals satisfied = do
@@ -101,6 +105,12 @@ ask' currAnimals animals properties satisfied
         else 
             ask' currAnimals (reduceAnimals animals (head properties)) (tail properties) satisfied
 
+
+loadDataFromFile :: String -> IO ()
+loadDataFromFile file = do
+    alldata <- readFile file
+    putStrLn alldata
+    -- return (alldata, Animal)
 -- main = do
 --     putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."
 --     let props = loadPropertiesSet dataset
