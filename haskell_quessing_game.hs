@@ -105,15 +105,48 @@ ask' currAnimals animals properties satisfied
         else 
             ask' currAnimals (reduceAnimals animals (head properties)) (tail properties) satisfied
 
+-- parseFile :: String -> [Animals]
+-- parseFile "" = []
+-- parseFile (x:xs) = 
 
-loadDataFromFile :: String -> IO ()
-loadDataFromFile file = do
-    alldata <- readFile file
-    putStrLn alldata
-    -- return (alldata, Animal)
--- main = do
---     putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."
---     let props = loadPropertiesSet dataset
---     let loadedData = dataset
---     -- ask loadedData props 
---     putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."
+loadDataFromFile :: String -> IO String
+loadDataFromFile file = readFile file
+
+
+allNonCapitalLetters :: String -> Bool
+allNonCapitalLetters str = all (\ letter -> letter `elem` ['a'..'z']) str
+
+validName::String -> Bool
+validName "" = False
+validName str
+    | (allNonCapitalLetters (init (tail str))) = True
+    | otherwise = False
+
+validAnimalStr :: String -> Bool
+validAnimalStr "" = False
+validAnimalStr str = if (validName name) then True else False
+    where
+    name     =  (takeWhile (/= '[') str)
+    propsStr = (dropWhile (/= '[') str)
+
+parse:: [String] -> String
+parse [] = ""
+parse (x:xs)
+    | validAnimalStr x = "T" ++ parse xs
+    | otherwise = "F" ++ parse xs
+
+main = do
+    putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."
+    -- let props = loadPropertiesSet dataset
+    -- let loadedData = dataset
+    -- ask load
+    input <- loadDataFromFile "animals.txt"
+    let fileLines = lines input
+    putStrLn input
+    let res = parse fileLines
+    putStrLn res
+    -- putStrLn res
+    -- putStrLn (head fileLines)
+    -- putStrLn (takeWhile (/= '[') (head fileLines))
+    -- putStrLn (dropWhile (/= '[') (head fileLines))
+    putStrLn "End..\n.."
