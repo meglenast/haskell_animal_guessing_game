@@ -116,17 +116,42 @@ loadDataFromFile file = readFile file
 allNonCapitalLetters :: String -> Bool
 allNonCapitalLetters str = all (\ letter -> letter `elem` ['a'..'z']) str
 
-validName::String -> Bool
-validName "" = False
-validName str
-    | (allNonCapitalLetters (init (tail str))) = True
+validNameStr :: String -> Bool
+validNameStr str
+    | length str <= 2 = False
+    | ((head str) == '"') && ((last str) == '"') && (allNonCapitalLetters (init (tail str))) = True
     | otherwise = False
 
-validAnimalStr :: String -> Bool
-validAnimalStr "" = False
-validAnimalStr str = if (validName name) then True else False
+
+splitByDelim :: String -> Char -> [String]
+splitByDelim "" _ = []
+splitByDelim str delim = curr : splitByDelim rest delim
     where
-    name     =  (takeWhile (/= '[') str)
+    curr = takeWhile (/= delim) str
+    temp = dropWhile (/= delim) str
+    rest = if (temp == "") then temp  else (tail temp)
+
+validProp :: String -> Bool
+validProp str
+    | length str <= 2 = False
+    | ((head str) == '"') && ((last str) == '"') = True
+    | otherwise = False
+
+validPropsStr :: String -> Bool
+validPropsStr str
+    | length str <= 4 = False
+    |  ((head str) == '[')  && ((last str) == ']') && (all (\x -> (validProp x)) props) = True
+    |  otherwise  = False
+    where
+    props = splitByDelim (init (tail str)) ','
+
+validAnimalStr :: String -> Bool
+validAnimalStr str
+    | length str <= 8 = False
+    | (validNameStr nameStr) && (validPropsStr propsStr) = True
+    | otherwise = False
+    where
+    nameStr  = (takeWhile (/= '[') str)
     propsStr = (dropWhile (/= '[') str)
 
 parse:: [String] -> String
@@ -134,6 +159,10 @@ parse [] = ""
 parse (x:xs)
     | validAnimalStr x = "T" ++ parse xs
     | otherwise = "F" ++ parse xs
+
+parse':: [String] -> Bool
+parse' [] = False
+parse' xs = (all (\ x -> validAnimalStr x) xs)
 
 main = do
     putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."
@@ -143,9 +172,13 @@ main = do
     input <- loadDataFromFile "animals.txt"
     let fileLines = lines input
     putStrLn input
-    let res = parse fileLines
-    putStrLn res
-    -- putStrLn res
+    -- let res = parse fileLines
+    let bool_res = parse' fileLines
+    let temp_res_check = (dropWhile (/= '[') (head fileLines))
+    -- let temp_res_prop_check = (validPropsStr (takeWhile (/= ']') (head fileLines)))
+    let rest = (last (dropWhile (/= ']') (head fileLines)))
+    putStrLn (show bool_res)
+    
     -- putStrLn (head fileLines)
     -- putStrLn (takeWhile (/= '[') (head fileLines))
     -- putStrLn (dropWhile (/= '[') (head fileLines))
