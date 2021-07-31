@@ -154,31 +154,53 @@ validAnimalStr str
     nameStr  = (takeWhile (/= '[') str)
     propsStr = (dropWhile (/= '[') str)
 
-parse:: [String] -> String
-parse [] = ""
-parse (x:xs)
-    | validAnimalStr x = "T" ++ parse xs
-    | otherwise = "F" ++ parse xs
+parseAnimal :: String -> Animal
+parseAnimal str = Animal name propsLst
+    where
+    name  = (init (tail (takeWhile (/= '[') str)))
+    props = splitByDelim (init (tail (dropWhile (/= '[') str))) ','
+    propsLst = map (\ x -> (init (tail x))) props
 
-parse':: [String] -> Bool
-parse' [] = False
-parse' xs = (all (\ x -> validAnimalStr x) xs)
+
+parse:: [String] -> [Animal]
+parse [] = []
+parse (x:xs) = (parseAnimal x) : (parse xs)
+    
+validateFile:: [String] -> Bool
+validateFile [] = False
+validateFile xs = (all (\ x -> validAnimalStr x) xs)
+
+isEndOfLine :: Char -> Bool
+isEndOfLine '\n' = True
+isEndOfLine '\r' = True
+isEndOfLine _ = False
+
+splitIntoLines :: String -> [String]
+splitIntoLines "" = []
+splitIntoLines str = if (curr == "") then splitIntoLines trimmed else curr : splitIntoLines trimmed 
+    where
+        curr = takeWhile (\ symbol -> (not (isEndOfLine symbol))) str
+        rest = dropWhile (\ symbol -> (not (isEndOfLine symbol))) str
+        trimmed = if (rest /= "") then (tail rest) else rest
 
 main = do
-    putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."
-    -- let props = loadPropertiesSet dataset
-    -- let loadedData = dataset
+    -- putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."
+    --let props = loadPropertiesSet dataset
+    --let loadedData = dataset
     -- ask load
     input <- loadDataFromFile "animals.txt"
-    let fileLines = lines input
+    let fileLines = splitIntoLines input
     putStrLn input
+    putStrLn (show fileLines)
+    -- putStrLn input
     -- let res = parse fileLines
-    let bool_res = parse' fileLines
-    let temp_res_check = (dropWhile (/= '[') (head fileLines))
-    -- let temp_res_prop_check = (validPropsStr (takeWhile (/= ']') (head fileLines)))
-    let rest = (last (dropWhile (/= ']') (head fileLines)))
-    putStrLn (show bool_res)
-    
+    -- let bool_res = validateFile fileLines
+
+    -- putStrLn (show bool_res)
+    let parsed = parse fileLines
+    -- putStrLn (show parsed)
+    -- writeFile "out.txt" . intercalate "\n" . map show $ parsed
+    writeFile "animals.txt" . intercalate "\n" . map show $ parsed    
     -- putStrLn (head fileLines)
     -- putStrLn (takeWhile (/= '[') (head fileLines))
     -- putStrLn (dropWhile (/= '[') (head fileLines))
