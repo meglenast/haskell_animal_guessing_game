@@ -25,7 +25,7 @@ dog1 = Animal "dog1" ["4-legged", "furry", "barks"]
 
 -- --TO-DO -- function that loads animals from file int a list of Animals
 dataset :: [Animal]
-dataset = [cat, coala, dog, dog1]
+dataset = [cat, coala, dog]
 
 -- writeToFile :: [Animal] -> IO()
 -- writeToFile [] = do putStrLn "Done writing in file..\n"
@@ -92,18 +92,18 @@ ableToGuess prevDataBase currAnimals satisfied = do
 -- ask  animals properties = ask' animals properties []
 --     where 
 
-ask' :: [Animal] -> [Animal] -> [String] -> [String]  -> IO ()
-ask' currAnimals animals [] satisfied = do ableToGuess currAnimals animals satisfied
-ask' currAnimals [] _ satisfied = do unableToGuess currAnimals satisfied
-ask' currAnimals animals properties satisfied
+ask :: [Animal] -> [Animal] -> [String] -> [String]  -> IO ()
+ask currAnimals animals [] satisfied = do ableToGuess currAnimals animals satisfied
+ask currAnimals [] _ satisfied = do unableToGuess currAnimals satisfied
+ask currAnimals animals properties satisfied
     | readyToGuess animals = do putStrLn $ makeGuess animals
     | otherwise = do
         putStrLn ("Is your animal " ++ (head properties) ++ " ? Y/N..")
         userInput <- getLine
         if userInput ==  "Y" then --to-do case instead
-            ask' currAnimals (reduceProperties animals (head properties)) (tail properties) (head properties : satisfied)
+            ask currAnimals (reduceProperties animals (head properties)) (tail properties) (head properties : satisfied)
         else 
-            ask' currAnimals (reduceAnimals animals (head properties)) (tail properties) satisfied
+            ask currAnimals (reduceAnimals animals (head properties)) (tail properties) satisfied
 
 -- parseFile :: String -> [Animals]
 -- parseFile "" = []
@@ -166,9 +166,13 @@ parse:: [String] -> [Animal]
 parse [] = []
 parse (x:xs) = (parseAnimal x) : (parse xs)
     
-validateFile:: [String] -> Bool
-validateFile [] = False
-validateFile xs = (all (\ x -> validAnimalStr x) xs)
+validateFileAnimals:: [String] -> Bool
+validateFileAnimals [] = False
+validateFileAnimals xs = (all (\ x -> validAnimalStr x) xs)
+
+validateFileQuestions:: [String] -> Bool
+validateFileQuestions [] = False
+validateFileQuestions xs = (all (\ x -> validProp x) xs)  
 
 isEndOfLine :: Char -> Bool
 isEndOfLine '\n' = True
@@ -183,25 +187,20 @@ splitIntoLines str = if (curr == "") then splitIntoLines trimmed else curr : spl
         rest = dropWhile (\ symbol -> (not (isEndOfLine symbol))) str
         trimmed = if (rest /= "") then (tail rest) else rest
 
-main = do
-    -- putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."
-    --let props = loadPropertiesSet dataset
-    --let loadedData = dataset
-    -- ask load
-    input <- loadDataFromFile "animals.txt"
-    let fileLines = splitIntoLines input
-    putStrLn input
-    putStrLn (show fileLines)
-    -- putStrLn input
-    -- let res = parse fileLines
-    -- let bool_res = validateFile fileLines
+startGame :: [String] -> IO()
+startGame fileLinesAnimals = do
+    let animals = parse fileLinesAnimals
+    let questions = loadPropertiesSet animals    
+    ask animals animals questions []
 
-    -- putStrLn (show bool_res)
-    let parsed = parse fileLines
-    -- putStrLn (show parsed)
-    -- writeFile "out.txt" . intercalate "\n" . map show $ parsed
-    writeFile "animals.txt" . intercalate "\n" . map show $ parsed    
-    -- putStrLn (head fileLines)
-    -- putStrLn (takeWhile (/= '[') (head fileLines))
-    -- putStrLn (dropWhile (/= '[') (head fileLines))
+main = do
+    putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."  
+    dataAnimals <- readFile "animals.txt"
+    dataQuestions <- readFile "questions.txt"
+    let fileLines = splitIntoLines dataAnimals
+    let questionsLines = splitIntoLines dataQuestions
+    putStrLn dataQuestions 
+    if ((validateFileAnimals fileLines) && (validateFileQuestions questionsLines))
+    then startGame fileLines   
+    else  putStrLn "Invalid args..Could not parse the files..\n"
     putStrLn "End..\n.."
