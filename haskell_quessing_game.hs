@@ -1,3 +1,5 @@
+module AnimalGuessingGame where
+
 import Prelude
 import Data.List
 
