@@ -1,27 +1,21 @@
 import Prelude
 import Data.List
 
--- --TO-DO -- create propper data structure
 data Animal = Animal { animal_name :: String,
                         properties :: [String]} deriving (Read)
+
+data Tree a = EmptyTree | Tree {root :: a,
+                            left  :: (Tree a),
+                            right :: (Tree a)} deriving (Show, Eq)
                 
 instance Show Animal where
     show (Animal animal_name properties) = show (animal_name) ++ show (properties)
-        
-cat :: Animal
-cat = Animal "cat" ["4-legged", "furry", "meows"]
 
-coala :: Animal
-coala = Animal "coala" ["4-legged", "furry", "lazy", "eats-bamboo"]
-
-dog :: Animal
-dog = Animal "dog" ["4-legged", "furry", "barks"]
-
-dog1 :: Animal
-dog1 = Animal "dog1" ["4-legged", "furry", "barks"]
-
-dataset :: [Animal]
-dataset = [cat, coala, dog]
+isLeaf ::(Eq a) => Tree a -> Bool
+isLeaf EmptyTree = False
+isLeaf bst
+    | ((left bst) == EmptyTree) && ((right bst) == EmptyTree) = True
+    | otherwise = False
 
 loadPropertiesSet :: [Animal] -> [String]
 loadPropertiesSet [] = []
@@ -53,7 +47,7 @@ dropStr str (x:xs)
 
 unableToGuess :: [Animal] -> [String] -> IO()
 unableToGuess animals satisfied = do
-    putStrLn "Not enough data to quess..\nMake me smarter and answer those questtions..\nWhat was your animal?.."
+    putStrLn "Not enough data to quess..\nMake me smarter and answer those questions..\nWhat was your animal?.."
     userAnimal <- getLine
     putStrLn "Tell me a true fact about it.\nHow can I recognize it?"
     userProp <- getLine
@@ -82,6 +76,81 @@ ask currAnimals animals properties satisfied
             ask currAnimals (reduceProperties animals (head properties)) (tail properties) (head properties : satisfied)
         else 
             ask currAnimals (reduceAnimals animals (head properties)) (tail properties) satisfied
+
+unableToGuess' :: [String] -> [Animal] -> IO ()
+unableToGuess' satisfied animals = do
+    putStrLn "Not enough data to quess..\nMake me smarter and answer those questtions..\nWhat was your animal?.."
+    userAnimal <- getLine
+    putStrLn ("How can I recognize it? Tell me a true fact about it, please.. \n")
+    userProp <- getLine
+    writeFile "animals.txt" . intercalate "\n" . map show $ ((Animal userAnimal (userProp:satisfied)):animals)
+
+-- unableToGuess'' :: [String] -> [Animal] -> String -> IO ()
+-- unableToGuess'' satisfied animals last_seen_subroot = do
+--     putStrLn "Not enough data to quess..\nMake me smarter and answer those questtions..\nWhat was your animal?.."
+--     userAnimal <- getLine
+--     putStrLn ("How can I recognize it from " ++ last_seen_subroot ++ "?\n")
+--     userProp <- getLine
+--     putStrLn ("Which one is " ++ userProp ++ "?\n")
+--     userAnswer <- getLine
+--     putStrLn "FINISH WRitiNG iN FILE"
+--     -- writeFile "animals.txt" ((Animal userAnimal (userProp:satisfied)):animals)
+--     if userAnswer == last_seen_subroot then writeFile "animals.txt" . intercalate "\n" . map show $ ((Animal userAnimal (userProp:[])):animals)
+--     else writeFile "animals.txt" . intercalate "\n" . map show $ ((Animal userAnimal (userProp:[])):animals)
+
+deleteByKey :: String -> [Animal] -> [Animal]
+deleteByKey _ [] = []
+deleteByKey key (x:xs)
+    | key == (animal_name x) = xs
+    | otherwise = x : (deleteByKey key xs)
+
+alreadyExists :: String -> [Animal] -> Bool
+alreadyExists _ [] = False
+alreadyExists curr (x:xs) 
+    | curr == (animal_name x) = True
+    | otherwise = alreadyExists curr xs
+
+
+getPropByKey :: String -> [Animal] -> [String]
+getPropByKey _ [] = []
+getPropByKey curr (x:xs)
+    | curr == (animal_name x) = (properties x)
+    | otherwise = getPropByKey curr xs 
+
+makeGuess' :: String -> [String] -> [Animal] -> IO ()
+makeGuess' curr_guess satisfied animals = do
+    putStrLn ("Is your animal a/an .. " ++ curr_guess ++ "?\n")
+    userInput <- getLine -- tuk mai nqma kak da se e obogatilo ..
+    if (userInput == "Y") then putStrLn "DONEEE " 
+    -- writeFile "animals.txt" . intercalate "\n" . map show $ ((Animal curr_guess satisfied) : (deleteByKey  curr_guess animals))
+    else do
+    putStrLn ("What was your animal?..")
+    userAnimal <- getLine 
+    putStrLn ("How can I recognize it from " ++ curr_guess ++ "?\n")
+    userProp <- getLine
+    putStrLn ("Which one is " ++ userProp ++ "?\n")
+    userAnswerCorrect <- getLine
+    -- if (curr_guess == userAnswerCorrect)
+    -- then  writeFile "animals.txt" . intercalate "\n" . map show $ ((Animal userAnimal satisfied) : (Animal curr_guess (userProp : satisfied)) : (deleteByKey  curr_guess animals))
+    -- else  writeFile "animals.txt" . intercalate "\n" . map show $ ((Animal userAnimal (userProp : satisfied)) : animals)
+    if (curr_guess == userAnswerCorrect)
+    then writeFile "animals.txt" . intercalate "\n" . map show $ ((Animal userAnimal satisfied) : (Animal curr_guess (userProp : satisfied)) : (deleteByKey  curr_guess animals))
+    else do
+        if (alreadyExists userAnswerCorrect animals) then writeFile "animals .txt" . intercalate "\n" . map show $ ((Animal userAnimal ((userProp : satisfied) ++ (getPropByKey userAnswerCorrect animals))) : (deleteByKey  userAnswerCorrect animals))
+        else writeFile "animals.txt" . intercalate "\n" . map show $ ((Animal userAnimal (userProp : satisfied)) : animals)
+
+
+resolve :: Tree String -> [String] -> [Animal] -> IO ()
+resolve EmptyTree satisfied animals = unableToGuess' satisfied animals
+resolve bst satisfied animals 
+    | isLeaf bst =  makeGuess' (root bst) satisfied animals
+    | otherwise = do
+        putStrLn ("Is your animal " ++ (root bst) ++ " ? Y/N..")
+        userInput <- getLine
+        if userInput ==  "Y" then --to-do case instead
+            resolve (left bst) (root bst : satisfied) animals 
+        else 
+            resolve (right bst) satisfied animals
  
 loadDataFromFile :: String -> IO String
 loadDataFromFile file = readFile file
@@ -160,20 +229,57 @@ splitIntoLines str = if (curr == "") then splitIntoLines trimmed else curr : spl
         rest = dropWhile (\ symbol -> (not (isEndOfLine symbol))) str
         trimmed = if (rest /= "") then (tail rest) else rest
 
+insertIntoEmptyTree :: Animal -> Tree String
+insertIntoEmptyTree animal
+    | props == [] = Tree name EmptyTree EmptyTree
+    | otherwise = Tree (head props) (insertIntoEmptyTree (Animal name (tail props))) EmptyTree
+    where
+        name = animal_name animal
+        props = properties animal
+
+insertIntoTree :: Tree String -> Animal -> [String] -> Tree String
+insertIntoTree bst animal names 
+    | (root bst) `elem` props = Tree (root bst) (insertBST (left bst) (Animal name (delete (root bst) props)) names) (right bst)
+    | (root bst) `elem` names = Tree (head props) (insertBST (left bst) (Animal name (tail props)) names)  (Tree (root bst) EmptyTree EmptyTree) 
+    | otherwise =  Tree (root bst) (left bst) (insertBST (right bst) (Animal name (delete (root bst) props)) names)
+    where
+        name = animal_name animal
+        props = properties animal
+
+insertBST :: Tree String -> Animal -> [String] -> Tree String
+insertBST EmptyTree animal _ = insertIntoEmptyTree animal
+insertBST bst animal names = insertIntoTree bst animal names
+
+buildBinarySearchTree :: [Animal] -> [String] -> Tree String
+buildBinarySearchTree [] _ = EmptyTree
+buildBinarySearchTree xs names = foldl (\ tree curr -> insertBST tree curr names) EmptyTree xs
+
 startGame :: [String] -> IO()
 startGame fileLinesAnimals = do
     let animals = parse fileLinesAnimals
     let questions = loadPropertiesSet animals    
     ask animals animals questions []
 
+startGame' :: Tree String -> [Animal] -> IO()
+startGame' bst animals = do
+    resolve bst [] animals
+
+animalNames:: [Animal] -> [String]
+animalNames animals = map (\ curr -> (animal_name curr)) animals
+
 main = do
     putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."  
     dataAnimals <- readFile "animals.txt"
-    dataQuestions <- readFile "questions.txt"
+    -- dataQuestions <- readFile "questions.txt"
     let fileLines = splitIntoLines dataAnimals
-    let questionsLines = splitIntoLines dataQuestions
-    putStrLn dataQuestions 
-    if ((validateFileAnimals fileLines) && (validateFileQuestions questionsLines))
-    then startGame fileLines   
-    else  putStrLn "Invalid args..Could not parse the files..\n"
+    let parsed = parse fileLines
+    let names = animalNames parsed
+    let tree = buildBinarySearchTree parsed names
+    putStrLn (show tree)
+    startGame' tree parsed
+    -- let questionsLines = splitIntoLines dataQuestions
+    -- if ((validateFileAnimals fileLines) && (validateFileQuestions questionsLines))
+    --if (validateFileAnimals fileLines)
+    --then startGame fileLines   
+    --else  putStrLn "Invalid args..Could not parse the files..\n"
     putStrLn "End..\n.."
