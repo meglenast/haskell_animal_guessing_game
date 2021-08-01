@@ -132,32 +132,37 @@ buildBinarySearchTree :: [Animal] -> [String] -> Tree String
 buildBinarySearchTree [] _ = EmptyTree
 buildBinarySearchTree xs names = foldl (\ tree curr -> insertBST tree curr names) EmptyTree xs
 
-startGame :: [String] -> IO()
-startGame fileLines = do
-    let animals = parse fileLines
-    let names = animalNames animals
-    let bst = buildBinarySearchTree animals names
-    resolve bst [] animals
+startGame :: String -> IO()
+startGame filename = do
+    dataAnimals <- readFile filename
+    let fileLines = splitIntoLines dataAnimals
+    if (validateFileAnimals fileLines) then do
+        let animals = parse fileLines
+        let names = animalNames animals
+        let bst = buildBinarySearchTree animals names
+        resolve bst [] animals
+    else  putStrLn "Invalid args..Could not parse the files..\n"
+    
 
 unableToGuess :: [String] -> [Animal] -> IO ()
 unableToGuess satisfied animals = do
     putStrLn "Not enough data to quess..\nMake me smarter and answer those questtions..\nWhat was your animal?.."
     userAnimal <- getLine
-    putStrLn ("How can I recognize it? Tell me a true fact about it, please.. \n")
+    putStrLn ("\n How can I recognize it? Tell me a true fact about it, please.. \n")
     userProp <- getLine
     safeData ((Animal userAnimal (userProp:satisfied)):animals)
 
 makeGuess :: String -> [String] -> [Animal] -> IO ()
 makeGuess curr_guess satisfied animals = do
-    putStrLn ("Is your animal a/an .. " ++ curr_guess ++ "?Yes/No\n")
-    userInput <- getLine 
-    if (userInput == "Yes") then putStrLn "I won! :)\n" 
+    putStrLn ("\nIs your animal a/an .. " ++ curr_guess ++ "?Y/N")
+    userInput <- getChar 
+    if (userInput == 'Y') then putStrLn "\nI won! :) \n" 
     else do
     putStrLn ("What was your animal?..")
     userAnimal <- getLine 
-    putStrLn ("How can I recognize it from " ++ curr_guess ++ "?\n")
+    putStrLn ("\nHow can I recognize it from " ++ curr_guess ++ "?\n")
     userProp <- getLine
-    putStrLn ("Which one is " ++ userProp ++ "?\n")
+    putStrLn ("\nWhich one is " ++ userProp ++ "?\n")
     userAnswerCorrect <- getLine
     
     if (curr_guess == userAnswerCorrect)
@@ -174,13 +179,13 @@ resolve EmptyTree satisfied animals = unableToGuess satisfied animals
 resolve bst satisfied animals 
     | isLeaf bst =  makeGuess (root bst) satisfied animals
     | otherwise = do
-        putStrLn ("Is your animal " ++ (root bst) ++ " ? Yes/No..")
-        userInput <- getLine
-        if userInput ==  "Yes" then --to-do case instead
-            resolve (left bst) (root bst : satisfied) animals 
-        else 
-            resolve (right bst) satisfied animals
- 
+        putStrLn ("Is your animal " ++ (root bst) ++ " ? Y/N..")
+        userInput <- getChar
+        case userInput of
+            'Y' -> resolve (left bst) (root bst : satisfied) animals
+            'N' -> resolve (right bst) satisfied animals
+            _   -> resolve bst satisfied animals 
+
 allNonCapitalLetters :: String -> Bool
 allNonCapitalLetters str = all (\ letter -> letter `elem` ['a'..'z']) str
 
@@ -191,11 +196,12 @@ validNameStr str
     | otherwise = False
 
 main = do
-    putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start quessing\n.."  
-    dataAnimals <- readFile file_name
-    let fileLines = splitIntoLines dataAnimals
-
-    if (validateFileAnimals fileLines)
-    then startGame fileLines   
-    else  putStrLn "Invalid args..Could not parse the files..\n"
-    putStrLn "End..\n.."
+    putStrLn "Welcome to a new game of Guess the animal \n Think af an animal..\n Let's start guessing\n.."
+    putStrLn "MENU\n *Start new game(n/N)\n *Quit(q/Q)"
+    key <- getChar
+    case key of
+        'n' -> startGame "animals.txt"
+        'N' -> startGame "animals.txt"
+        'q' -> putStrLn "\n Thank you for playing."
+        'Q' -> putStrLn "\n Thank you for playing."
+        _   -> main
