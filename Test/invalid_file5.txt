@@ -1,0 +1,4 @@
+"unicorn"["pink"]
+"cat"["4-legged","furry","meows"
+"coala["4-legged","furry","lazy","eats-bamboo"]
+"dog"["4-legged","furry","barks"]
