@@ -145,7 +145,6 @@ startGame filename = do
         resolve bst [] animals
     else  putStrLn "Invalid args..Could not parse the files..\n"
     
-
 unableToGuess :: [String] -> [Animal] -> IO ()
 unableToGuess satisfied animals = do
     putStrLn "Not enough data to quess..\nMake me smarter and answer those questtions..\nWhat was your animal?.."
