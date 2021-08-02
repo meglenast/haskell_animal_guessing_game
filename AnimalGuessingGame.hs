@@ -7,7 +7,7 @@ file_name :: String
 file_name = "animals.txt"
 
 data Animal = Animal { animal_name :: String,
-                        properties :: [String]} deriving (Read)
+                        properties :: [String]} deriving (Read,Eq)
 
 data Tree a = EmptyTree | Tree {root :: a,
                             left  :: (Tree a),
