@@ -1,6 +1,5 @@
 module AnimalGuessingGame where
 
-import Prelude
 import Data.List
 
 file_name :: String
@@ -18,36 +17,25 @@ instance Show Animal where
 
 isLeaf ::(Eq a) => Tree a -> Bool
 isLeaf EmptyTree = False
-isLeaf bst
-    | ((left bst) == EmptyTree) && ((right bst) == EmptyTree) = True
-    | otherwise = False
+isLeaf (Tree _ left right) 
+    | (left == EmptyTree) && (right == EmptyTree) = True
+    | otherwise = False 
 
 safeData :: [Animal] -> IO ()
 safeData content = writeFile file_name . intercalate "\n" . map show $ content
-
-loadDataFromFile :: String -> IO String
-loadDataFromFile file = readFile file
 
 animalNames:: [Animal] -> [String]
 animalNames animals = map (\ curr -> (animal_name curr)) animals
 
 deleteByKey :: String -> [Animal] -> [Animal]
-deleteByKey _ [] = []
-deleteByKey key (x:xs)
-    | key == (animal_name x) = xs
-    | otherwise = x : (deleteByKey key xs)
+deleteByKey name animals = foldr (\ curr res -> if (animal_name curr == name) then res else curr : res) [] animals
 
 getPropByKey :: String -> [Animal] -> [String]
 getPropByKey _ [] = []
-getPropByKey curr (x:xs)
-    | curr == (animal_name x) = (properties x)
-    | otherwise = getPropByKey curr xs 
+getPropByKey name animals = properties (head  (dropWhile (\ curr -> ((animal_name curr) /= name)) animals))
 
 alreadyExists :: String -> [Animal] -> Bool
-alreadyExists _ [] = False
-alreadyExists curr (x:xs) 
-    | curr == (animal_name x) = True
-    | otherwise = alreadyExists curr xs
+alreadyExists name  animals = any (\ curr -> (animal_name curr) == name) animals
 
 splitByDelim :: String -> Char -> [String]
 splitByDelim "" _ = []
@@ -77,16 +65,15 @@ validAnimalStr str
     | (validNameStr nameStr) && (validPropsStr propsStr) = True
     | otherwise = False
     where
-    nameStr  = (takeWhile (/= '[') str)
-    propsStr = (dropWhile (/= '[') str)
+    (nameStr, propsStr) = span (/= '[') str 
 
 parseAnimal :: String -> Animal
 parseAnimal str = Animal name propsLst
     where
-    name  = (init (tail (takeWhile (/= '[') str)))
-    props = splitByDelim (init (tail (dropWhile (/= '[') str))) ','
+    (nameStr,propsStr) = span (/= '[') str
+    name  = (init (tail nameStr))
+    props = splitByDelim (init (tail propsStr)) ','
     propsLst = map (\ x -> (init (tail x))) props
-
 
 parse:: [String] -> [Animal]
 parse [] = []
@@ -105,26 +92,19 @@ splitIntoLines :: String -> [String]
 splitIntoLines "" = []
 splitIntoLines str = if (curr == "") then splitIntoLines trimmed else curr : splitIntoLines trimmed 
     where
-        curr = takeWhile (\ symbol -> (not (isEndOfLine symbol))) str
-        rest = dropWhile (\ symbol -> (not (isEndOfLine symbol))) str
+        (curr,rest) = span (\ symbol -> (not (isEndOfLine symbol))) str 
         trimmed = if (rest /= "") then (tail rest) else rest
 
 insertIntoEmptyTree :: Animal -> Tree String
-insertIntoEmptyTree animal
+insertIntoEmptyTree (Animal name props)
     | props == [] = Tree name EmptyTree EmptyTree
     | otherwise = Tree (head props) (insertIntoEmptyTree (Animal name (tail props))) EmptyTree
-    where
-        name = animal_name animal
-        props = properties animal
 
 insertIntoTree :: Tree String -> Animal -> [String] -> Tree String
-insertIntoTree bst animal names 
+insertIntoTree bst (Animal name props) names 
     | (root bst) `elem` props = Tree (root bst) (insertBST (left bst) (Animal name (delete (root bst) props)) names) (right bst)
     | (root bst) `elem` names = Tree (head props) (insertBST (left bst) (Animal name (tail props)) names)  (Tree (root bst) EmptyTree EmptyTree) 
     | otherwise =  Tree (root bst) (left bst) (insertBST (right bst) (Animal name (delete (root bst) props)) names)
-    where
-        name = animal_name animal
-        props = properties animal
 
 insertBST :: Tree String -> Animal -> [String] -> Tree String
 insertBST EmptyTree animal _ = insertIntoEmptyTree animal
