@@ -5,8 +5,8 @@ main = do
     putStrLn "MENU\n *Start new game(n/N)\n *Quit(q/Q)"
     key <- getChar
     case key of
-        'n' -> startGame "animals.txt"
-        'N' -> startGame "animals.txt"
+        'n' -> startGame "animals1.txt"
+        'N' -> startGame "animals1.txt"
         'q' -> putStrLn "\n Thank you for playing."
         'Q' -> putStrLn "\n Thank you for playing."
         _   -> main

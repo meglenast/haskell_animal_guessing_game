@@ -33,6 +33,12 @@ koala = Animal "koala" ["4-legged","furry","lazy","eats-bamboo"]
 panda :: Animal
 panda = Animal "panda" ["4-legged","furry","eats-bamboo"]
 
+cat :: Animal
+cat = Animal "cat" ["4-legged","furry"]
+
+dog :: Animal
+dog = Animal "dog" ["4-legged","furry", "barks"]
+
 koala_bst :: Tree String
 koala_bst = (Tree {root = "4-legged", left = Tree {root = "furry", left = Tree {root = "lazy", left = Tree {root = "eats-bamboo", left = Tree {root = "koala", left = EmptyTree, right = EmptyTree}, right = EmptyTree}, right = EmptyTree}, right = EmptyTree}, right = EmptyTree})
 -- invalidFile_5 :: String
@@ -78,33 +84,50 @@ test_parsing_file = TestCase $ do
 test_parsing_empty_file = TestCase $ do
     mockFileContent <- readFile emptyFile
     let mockFileLines = splitIntoLines mockFileContent
-    assertEqual "Valid parsing" (parse mockFileLines) []
+    assertEqual "Valid parsing empty file" (parse mockFileLines) []
 
 -- Unit tests regarding the splitting of the file into separating the file into [String] //Works with both /r/n and /n as a new line delim
 test_split_file_into_lines = TestCase $ do
     mockFileContent <- readFile validFile_2
-    assertEqual "Valid parsing" (splitIntoLines mockFileContent) ["\"unicorn\"[\"pink\"]","\"cat\"[\"4-legged\",\"furry\",\"meows\"]","\"koala[\"4-legged\",\"furry\",\"lazy\",\"eats-bamboo\"]","\"dog\"[\"4-legged\",\"furry\",\"barks\"]"]
+    assertEqual "Split into lines" (splitIntoLines mockFileContent) 
+        ["\"unicorn\"[\"pink\"]","\"cat\"[\"4-legged\",\"furry\",\"meows\"]","\"koala\"[\"4-legged\",\"furry\",\"lazy\",\"eats-bamboo\"]","\"dog\"[\"4-legged\",\"furry\",\"barks\"]"]
 
 -- Unit tests regarding inserting into binary search tree curr
 
 -- Empty tree
 test_insert_empty_bst = TestCase $ do
-    assertEqual "Insert animal into empty BST" (insertIntoEmptyTree koala) (Tree {root = "4-legged", left = Tree {root = "furry", left = Tree {root = "lazy", left = Tree {root = "eats-bamboo", left = Tree {root = "koala", left = EmptyTree, right = EmptyTree}, right = EmptyTree}, right = EmptyTree}, right = EmptyTree}, right = EmptyTree})
+    assertEqual "Insert animal into empty BST" (insertIntoEmptyTree koala) 
+            (Tree {root = "4-legged", left = Tree {root = "furry", left = Tree {root = "lazy", left = Tree {root = "eats-bamboo", left = Tree {root = "koala", left = EmptyTree, right = EmptyTree}, right = EmptyTree}, right = EmptyTree}, right = EmptyTree}, right = EmptyTree})
 
 -- Non-empty tree
-test_insert_koala_bst = TestCase $ do
+test_insert1 = TestCase $ do
     let mockAnimalsNamesLst = ["koala"]
-    assertEqual "Insert animal into koala BST" (insertIntoTree koala_bst panda mockAnimalsNamesLst) (Tree {root = "4-legged", left = Tree {root = "furry", left = Tree {root = "lazy", left = Tree {root = "eats-bamboo", left = Tree {root = "koala", left = EmptyTree, right = EmptyTree}, right = EmptyTree}, right = Tree {root = "eats-bamboo", left = Tree {root = "panda", left = EmptyTree, right = EmptyTree}, right = EmptyTree}}, right = EmptyTree}, right = EmptyTree})
+    assertEqual "Insert animal into koala BST" (insertIntoTree koala_bst panda mockAnimalsNamesLst) 
+        (Tree {root = "4-legged", left = Tree {root = "furry", left = Tree {root = "lazy", left = Tree {root = "eats-bamboo", left = Tree {root = "koala", left = EmptyTree, right = EmptyTree}, right = EmptyTree}, right = Tree {root = "eats-bamboo", left = Tree {root = "panda", left = EmptyTree, right = EmptyTree}, right = EmptyTree}}, right = EmptyTree}, right = EmptyTree})
+
+--Test scenario : Inserting into a non-empty tree with a need to switch a leaf element with a property
+test_insert2 = TestCase $ do
+    let mockTree = insertIntoEmptyTree cat
+    let mockAnimalsNamesLst = ["cat","dog"]
+    assertEqual "Insert animal with with need to rotate leaf with property" (insertIntoTree mockTree dog mockAnimalsNamesLst) 
+            (Tree {root = "4-legged", left = Tree {root = "furry", left = Tree {root = "barks", left = Tree {root = "dog", left = EmptyTree, right = EmptyTree}, right = Tree {root = "cat", left = EmptyTree, right = EmptyTree}}, right = EmptyTree}, right = EmptyTree})
+
+test_insert3 = TestCase $ do
+    mockFileContent <- readFile validFile_2
+    let mockFileLines = splitIntoLines mockFileContent
+    let mockAnimals = parse mockFileLines
+    let bst = buildBinarySearchTree mockAnimals (animalNames mockAnimals)
+    assertEqual "Insert multiple animals" bst 
+            (Tree {root = "pink", left = Tree {root = "unicorn", left = EmptyTree, right = EmptyTree}, right = Tree {root = "4-legged", left = Tree {root = "furry", left = Tree 
+                    {root = "meows", left = Tree {root = "cat", left = EmptyTree, right = EmptyTree}, right = Tree {root = "lazy", left = Tree {root = "eats-bamboo", left = Tree {root = "koala", left = EmptyTree, right = EmptyTree}, right = EmptyTree}, right = Tree {root = "barks", left = Tree {root = "dog", left = EmptyTree, right = EmptyTree}, right = EmptyTree}}}, right = EmptyTree}, right = EmptyTree}})
 
 -- Creating TestList
 test_lst_validating_file_structure = TestList [test_valid_file, test_invalid_file_1, test_invalid_file_2, test_invalid_file_3, test_invalid_file_4, test_invalid_file_5]
 test_lst_parsing = TestList [test_valid_file, test_parsing_empty_file]
 test_lst_split_into_lines = TestList [test_split_file_into_lines]
-test_lst_insert_BST = TestList [test_insert_empty_bst, test_insert_koala_bst]
+test_lst_insert_BST = TestList [test_insert_empty_bst, test_insert1, test_insert2, test_insert3]
 
 main  = do
-    -- let res = insertIntoEmptyTree koala
-    -- putStrLn (show res)
     runTestTT test_lst_validating_file_structure
     runTestTT test_lst_parsing
     runTestTT test_lst_split_into_lines
