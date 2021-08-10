@@ -1,6 +1,6 @@
 module AnimalGuessingGame where
 
-import Data.List(intercalate, delete)
+import Data.List(intercalate, delete, nub)
 
 file_name :: String
 file_name = "animals.txt"
@@ -137,7 +137,12 @@ unableToGuess satisfied animals = do
   userAnimal <- getLine
   putStrLn ("\nHow can I recognize it? Tell me a true fact about it, please.. \n")
   userProp <- getLine
-  saveData $ (Animal userAnimal (userProp:satisfied)):animals
+  if (userAnimal `elem` (animalNames animals)) then  do 
+    let res_prop = nub $ ((userProp : satisfied) ++ (getPropByKey userAnimal animals))
+    putStrLn $ show res_prop
+    saveData $ (Animal userAnimal res_prop):(deleteByKey userAnimal animals)
+  else
+    saveData $ (Animal userAnimal (userProp:satisfied)):animals
 
 -- Makes a guess based on the user's answers so far
 makeGuess :: String -> [String] -> [Animal] -> IO ()
