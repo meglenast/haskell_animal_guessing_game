@@ -35,7 +35,8 @@ deleteByKey name animals = foldr (\ curr res -> if (animal_name curr == name) th
 -- Gets an animal's properties from a list of Animals by animal's name    
 getPropByKey :: String -> [Animal] -> [String]
 getPropByKey _ [] = []
-getPropByKey name animals = properties (head  (dropWhile (\ curr -> ((animal_name curr) /= name)) animals))
+getPropByKey name animals = if res == [] then [] else properties (head  res)
+  where res = dropWhile (\ curr -> (animal_name curr) /= name) animals
 
 -- Checks whether an animal exists in a list of animals 
 alreadyExists :: String -> [Animal] -> Bool
@@ -88,7 +89,7 @@ parse:: [String] -> [Animal]
 parse [] = []
 parse (x:xs) = (parseAnimal x) : (parse xs)
     
--- Validates the file with the knowleadge base 
+-- Validates the file containg the knowleadge base 
 validateFileAnimals:: [String] -> Bool
 validateFileAnimals [] = False
 validateFileAnimals xs = (all (\ x -> validAnimalStr x) xs)  
@@ -139,7 +140,6 @@ unableToGuess satisfied animals = do
   userProp <- getLine
   if (userAnimal `elem` (animalNames animals)) then  do 
     let res_prop = nub $ ((userProp : satisfied) ++ (getPropByKey userAnimal animals))
-    putStrLn $ show res_prop
     saveData $ (Animal userAnimal res_prop):(deleteByKey userAnimal animals)
   else
     saveData $ (Animal userAnimal (userProp:satisfied)):animals
@@ -149,9 +149,9 @@ makeGuess :: String -> [String] -> [Animal] -> IO ()
 makeGuess curr_guess satisfied animals = do
   putStrLn ("\nIs your animal a/an .. " ++ curr_guess ++ "?yes/no")
   userInput <- getLine
-  case userInput  of 
+  case userInput  of
     "yes" -> putStrLn "\nI won! :) \n"
-    "no" -> do 
+    "no" -> do
       putStrLn ("\nWhat was your animal?..")
       userAnimal <- getLine 
       putStrLn ("\nHow can I recognize it from " ++ curr_guess ++ "?\n")
