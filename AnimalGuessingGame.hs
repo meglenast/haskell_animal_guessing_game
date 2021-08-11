@@ -84,11 +84,11 @@ parseAnimal str = Animal name propsLst
   props = splitByDelim (init (tail propsStr)) ','
   propsLst = map (\ x -> (init (tail x))) props
 
--- Parses a list of valid animal's sting representations into list of objects of datatype Animal
+-- Parses a list of valid animal's sting representations into list of objects of datatype Animal. If there are multiple animals with the same name in the file the functions adds to the resulting list the
+-- animal that ocurrs first in the file.
 parse:: [String] -> [Animal]
-parse [] = []
-parse (x:xs) = (parseAnimal x) : (parse xs)
-    
+parse xs = foldl (\ res curr -> if (alreadyExists (animal_name (parseAnimal curr)) res) then res else res ++ [parseAnimal curr]) [] xs
+
 -- Validates the file containg the knowleadge base 
 validateFileAnimals:: [String] -> Bool
 validateFileAnimals [] = False
@@ -141,8 +141,9 @@ unableToGuess satisfied animals = do
   if (userAnimal `elem` (animalNames animals)) then  do 
     let res_prop = nub $ ((userProp : satisfied) ++ (getPropByKey userAnimal animals))
     saveData $ (Animal userAnimal res_prop):(deleteByKey userAnimal animals)
-  else
+  else 
     saveData $ (Animal userAnimal (userProp:satisfied)):animals
+  putStrLn ("\nThank you, I've finished writing in file.. \n")
 
 -- Makes a guess based on the user's answers so far
 makeGuess :: String -> [String] -> [Animal] -> IO ()
@@ -167,7 +168,7 @@ makeGuess curr_guess satisfied animals = do
         saveData $ (Animal userAnimal ((userProp : satisfied) ++ (getPropByKey userAnswerCorrect animals)) : (deleteByKey  userAnswerCorrect animals))
         else do
         saveData $ (Animal userAnimal (userProp : satisfied)) : animals
-    _ -> makeGuess curr_guess satisfied animals
+    _ -> makeGuess curr_guess satisfied animals  
 
 -- Resolves an animal based guess based on the user's answers 
 resolve :: Tree String -> [String] -> [Animal] -> IO ()

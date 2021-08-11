@@ -27,6 +27,9 @@ invalidFile_4 = "./Test/TestingFiles/invalid_file4.txt"
 invalidFile_5 :: String
 invalidFile_5 = "./Test/TestingFiles/invalid_file5.txt" 
 
+validFile_rep :: String
+validFile_rep = "./Test/TestingFiles/repeating_animals.txt" 
+
 koala :: Animal
 koala = Animal "koala" ["4-legged","furry","lazy","eats-bamboo"]
 
@@ -83,6 +86,11 @@ test_parsing_file = TestCase $ do
   mockFileContent <- readFile validFile_1
   let mockFileLines = splitIntoLines mockFileContent
   assertEqual "Valid parsing" (parse mockFileLines) [(Animal "unicorn"["pink"]), (Animal "cat"["4-legged","furry","meows"])]
+
+test_parsing_file_with_repetitions = TestCase $ do
+  mockFileContent <- readFile validFile_rep
+  let mockFileLines = splitIntoLines mockFileContent
+  assertEqual "Valid parsing with repetitions" (parse mockFileLines) [(Animal "unicorn"["pink"]), (Animal "cat"["4-legged","furry","meows"])]
 
 test_parsing_empty_file = TestCase $ do
   mockFileContent <- readFile emptyFile
@@ -224,7 +232,7 @@ test_parse3 = TestCase $ do
 
 -- Creating TestList
 test_lst_validating_file_structure = TestList [test_valid_file1, test_valid_file2, test_invalid_file_1, test_invalid_file_2, test_invalid_file_3, test_invalid_file_4, test_invalid_file_5]
-test_lst_parsing = TestList [test_valid_file1, test_parsing_empty_file]
+test_lst_parsing = TestList [test_valid_file1, test_parsing_empty_file, test_parsing_file_with_repetitions]
 test_lst_split_into_lines = TestList [test_split_file_into_lines]
 test_lst_insert_BST = TestList [test_insert_empty_bst, test_insert1, test_insert2, test_insert3]
 
